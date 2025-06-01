@@ -4,6 +4,8 @@ This tool automatically exports your Perplexity conversations as markdown files.
 
 It's raw but functional. You will need to log in using your email code.
 
+There is a pretty heavy rate limit, so don't expect to download more than a few dozen conversations at a time.
+
 ## Setup
 
 1.  Clone and install dependencies
