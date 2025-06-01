@@ -13,6 +13,25 @@ interface Conversation {
   url: string;
 }
 
+interface DoneFile {
+  processedUrls: string[];
+}
+
+async function loadDoneFile(): Promise<DoneFile> {
+  const doneFilePath = process.env.DONE_FILE || "done.json";
+  try {
+    const content = await fs.readFile(doneFilePath, "utf-8");
+    return JSON.parse(content);
+  } catch (error) {
+    return { processedUrls: [] };
+  }
+}
+
+async function saveDoneFile(doneFile: DoneFile): Promise<void> {
+  const doneFilePath = process.env.DONE_FILE || "done.json";
+  await fs.writeFile(doneFilePath, JSON.stringify(doneFile, null, 2));
+}
+
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -48,7 +67,10 @@ async function login(page: Page): Promise<void> {
   console.log("Successfully logged in");
 }
 
-async function scrollToBottomOfConversations(page: Page): Promise<void> {
+async function scrollToBottomOfConversations(
+  page: Page,
+  doneFile: DoneFile
+): Promise<void> {
   // Scroll to bottom and wait for more items until no new items load
   let previousHeight = 0;
   let currentHeight = await page.evaluate(() => {
@@ -57,6 +79,19 @@ async function scrollToBottomOfConversations(page: Page): Promise<void> {
   });
 
   while (previousHeight !== currentHeight) {
+    // Check if we've hit any processed URLs
+    const foundProcessed = await page.evaluate((processedUrls) => {
+      const items = Array.from(
+        document.querySelectorAll('div[data-testid="thread-title"]')
+      ).map((div: Element) => div.closest("a") as HTMLAnchorElement);
+      return items.some((item) => processedUrls.includes(item.href));
+    }, doneFile.processedUrls);
+
+    if (foundProcessed) {
+      console.log("Found already processed conversation, stopping scroll");
+      break;
+    }
+
     // Scroll to bottom
     await page.evaluate(() => {
       const container = document.querySelector("div.scrollable-container");
@@ -76,12 +111,15 @@ async function scrollToBottomOfConversations(page: Page): Promise<void> {
   }
 }
 
-async function getConversations(page: Page): Promise<Conversation[]> {
+async function getConversations(
+  page: Page,
+  doneFile: DoneFile
+): Promise<Conversation[]> {
   console.log("Navigating to library...");
   await page.goto("https://www.perplexity.ai/library");
 
   await page.waitForSelector('div[data-testid="thread-title"]');
-  await scrollToBottomOfConversations(page);
+  await scrollToBottomOfConversations(page, doneFile);
 
   // Get all conversation links
   const conversations = await page.evaluate(() => {
@@ -94,7 +132,10 @@ async function getConversations(page: Page): Promise<Conversation[]> {
     }));
   });
 
-  return conversations;
+  // Filter out already processed conversations
+  return conversations.filter(
+    (conv) => !doneFile.processedUrls.includes(conv.url)
+  );
 }
 
 async function saveConversation(
@@ -133,6 +174,12 @@ async function main(): Promise<void> {
   const outputDir = process.env.OUTPUT_DIR || "./conversations";
   await fs.mkdir(outputDir, { recursive: true });
 
+  // Load done file
+  const doneFile = await loadDoneFile();
+  console.log(
+    `Loaded ${doneFile.processedUrls.length} processed URLs from done file`
+  );
+
   const browser: Browser = await puppeteer.launch({
     // Authentication is interactive.
     headless: false,
@@ -149,12 +196,15 @@ async function main(): Promise<void> {
     });
 
     await login(page);
-    const conversations = await getConversations(page);
+    const conversations = await getConversations(page, doneFile);
 
-    console.log(`Found ${conversations.length} conversations`);
+    console.log(`Found ${conversations.length} new conversations to process`);
 
     for (const conversation of conversations) {
       await saveConversation(page, conversation);
+      doneFile.processedUrls.push(conversation.url);
+      // Save after each conversation in case of interruption
+      await saveDoneFile(doneFile);
     }
   } catch (error) {
     console.error("An error occurred:", error);
