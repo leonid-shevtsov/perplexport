@@ -2,20 +2,25 @@
 
 This tool automatically exports your Perplexity conversations as markdown files. Built with TypeScript and Puppeteer.
 
+It's raw but functional. You will need to log in using your email code.
+
 ## Setup
 
-1. Install dependencies:
+1.  Clone and install dependencies
 
-```bash
-yarn
-```
+    ```bash
+    git clone https://github.com/leonid-shevtsov/perplexity-exporter.git
+    yarn
+    ```
 
-2. Create a `.env` file in the project root with your Perplexity credentials:
+2.  Create a `.env` file in the project root with your Perplexity credentials:
 
-```
-PERPLEXITY_EMAIL=your_email@example.com
-OUTPUT_DIR=./conversations
-```
+    ```
+    PERPLEXITY_EMAIL=your_email@example.com
+    OUTPUT_DIR=./conversations
+    ```
+
+    (Or just pass these environment variables to the script in some other way.)
 
 ## Usage
 
