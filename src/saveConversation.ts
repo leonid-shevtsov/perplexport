@@ -29,7 +29,7 @@ export async function saveConversation(
   }
 
   let retryCount = 0;
-  const maxRetries = 3;
+  const maxRetries = 4;
 
   while (retryCount < maxRetries) {
     try {
@@ -44,9 +44,9 @@ export async function saveConversation(
         retryCount++;
         if (retryCount < maxRetries) {
           console.log(
-            `Rate limit hit, waiting 60 seconds before retry ${retryCount}/${maxRetries}...`
+            `Rate limit hit, waiting 5 minutes before retry ${retryCount}/${maxRetries}...`
           );
-          await sleep(60000); // Wait 60 seconds
+          await sleep(300000); // Wait 60 seconds
           await page.click('[data-testid="thread-dropdown-menu"]');
           continue;
         }
