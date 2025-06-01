@@ -54,7 +54,7 @@ export async function getConversations(
   await page.goto("https://www.perplexity.ai/library");
 
   await page.waitForSelector('div[data-testid="thread-title"]');
-  // await scrollToBottomOfConversations(page, doneFile);
+  await scrollToBottomOfConversations(page, doneFile);
 
   // Get all conversation links
   const conversations = await page.evaluate(() => {
