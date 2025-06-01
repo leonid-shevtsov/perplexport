@@ -32,9 +32,7 @@ async function main(): Promise<void> {
     const page = await browser.newPage();
 
     // Configure Puppeteer to allow downloads and set download directory
-    const client = await page.createCDPSession();
-    const downloadManager = new DownloadManager(client, outputDir);
-    await downloadManager.configureDownloadBehavior();
+    const downloadManager = await DownloadManager.create(page, outputDir);
 
     await login(page);
     const conversations = await getConversations(page, doneFile);

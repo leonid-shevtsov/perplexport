@@ -1,4 +1,4 @@
-import { CDPSession } from "puppeteer";
+import { CDPSession, Page } from "puppeteer";
 import path from "path";
 
 export class DownloadError extends Error {
@@ -16,7 +16,7 @@ interface DownloadProgressEvent {
 }
 
 export class DownloadManager {
-  private client: CDPSession;
+  private client!: CDPSession;
   private downloadPath: string;
   private lastDownloadedFile: string | null = null;
   private downloadPromise: Promise<string> | null = null;
@@ -24,10 +24,23 @@ export class DownloadManager {
   private downloadReject: ((error: Error) => void) | null = null;
   private currentDownloadFilename: string | null = null;
 
-  constructor(client: CDPSession, downloadPath: string) {
-    this.client = client;
+  private constructor(downloadPath: string) {
     this.downloadPath = downloadPath;
+  }
+
+  public static async create(
+    page: Page,
+    downloadPath: string
+  ): Promise<DownloadManager> {
+    const manager = new DownloadManager(downloadPath);
+    await manager.initialize(page);
+    return manager;
+  }
+
+  private async initialize(page: Page): Promise<void> {
+    this.client = await page.createCDPSession();
     this.setupDownloadListener();
+    await this.configureDownloadBehavior();
   }
 
   private setupDownloadListener(): void {
@@ -72,6 +85,22 @@ export class DownloadManager {
         }
       }
     );
+  }
+
+  private setupResponseListener(page: Page): void {
+    page.on("response", (response) => {
+      if (!response.ok() && this.downloadReject) {
+        this.downloadReject(
+          new DownloadError(
+            `Download failed: HTTP ${response.status()} ${response.statusText()}`,
+            response.status()
+          )
+        );
+        this.downloadResolve = null;
+        this.downloadReject = null;
+        this.currentDownloadFilename = null;
+      }
+    });
   }
 
   public async waitForDownload(
