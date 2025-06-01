@@ -132,10 +132,10 @@ async function getConversations(
     }));
   });
 
-  // Filter out already processed conversations
-  return conversations.filter(
-    (conv) => !doneFile.processedUrls.includes(conv.url)
-  );
+  // Filter out already processed conversations and reverse the order
+  return conversations
+    .filter((conv) => !doneFile.processedUrls.includes(conv.url))
+    .reverse();
 }
 
 async function saveConversation(
