@@ -40,6 +40,7 @@ export class DownloadManager {
   private async initialize(page: Page): Promise<void> {
     this.client = await page.createCDPSession();
     this.setupDownloadListener();
+    this.setupResponseListener(page);
     await this.configureDownloadBehavior();
   }
 

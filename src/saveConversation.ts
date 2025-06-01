@@ -47,6 +47,7 @@ export async function saveConversation(
             `Rate limit hit, waiting 60 seconds before retry ${retryCount}/${maxRetries}...`
           );
           await sleep(60000); // Wait 60 seconds
+          await page.click('[data-testid="thread-dropdown-menu"]');
           continue;
         }
       }
