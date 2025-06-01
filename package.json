@@ -9,9 +9,13 @@
     "start": "ts-node src/index.ts",
     "dev": "ts-node-dev --respawn src/index.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "perplexity",
+    "export",
+    "markdown"
+  ],
+  "author": "Leonid Shevtsov <leonid@shevtsov.me>",
+  "license": "MIT",
   "dependencies": {
     "dotenv": "^16.0.3",
     "puppeteer": "^24.9.0",
