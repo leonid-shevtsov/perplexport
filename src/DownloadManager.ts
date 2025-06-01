@@ -74,7 +74,9 @@ export class DownloadManager {
     );
   }
 
-  public async waitForDownload(): Promise<string> {
+  public async waitForDownload(
+    triggerDownload?: () => Promise<void>
+  ): Promise<string> {
     if (this.downloadPromise) {
       return this.downloadPromise;
     }
@@ -85,6 +87,9 @@ export class DownloadManager {
     });
 
     try {
+      if (triggerDownload) {
+        await triggerDownload();
+      }
       const result = await this.downloadPromise;
       this.downloadPromise = null;
       return result;

@@ -33,8 +33,9 @@ export async function saveConversation(
 
   while (retryCount < maxRetries) {
     try {
-      await page.click("text/Export as Markdown");
-      const downloadedFile = await downloadManager.waitForDownload();
+      const downloadedFile = await downloadManager.waitForDownload(async () => {
+        await page.click("text/Export as Markdown");
+      });
       console.log(`Downloaded file: ${downloadedFile}`);
       console.log(`Saved: ${conversation.url}`);
       return;
