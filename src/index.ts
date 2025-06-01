@@ -2,7 +2,7 @@ import "dotenv/config";
 import { Browser, Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import { promises as fs } from "fs";
-import path from "path";
+import path, { basename } from "path";
 
 // add stealth plugin and use defaults (all evasion techniques)
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
@@ -48,11 +48,40 @@ async function login(page: Page): Promise<void> {
   console.log("Successfully logged in");
 }
 
+async function scrollToBottomOfConversations(page: Page): Promise<void> {
+  // Scroll to bottom and wait for more items until no new items load
+  let previousHeight = 0;
+  let currentHeight = await page.evaluate(() => {
+    const container = document.querySelector("div.scrollable-container");
+    return container?.scrollHeight || 0;
+  });
+
+  while (previousHeight !== currentHeight) {
+    // Scroll to bottom
+    await page.evaluate(() => {
+      const container = document.querySelector("div.scrollable-container");
+      if (container) {
+        container.scrollTo(0, container.scrollHeight);
+      }
+    });
+
+    // Wait a bit for content to load
+    await sleep(2000);
+
+    previousHeight = currentHeight;
+    currentHeight = await page.evaluate(() => {
+      const container = document.querySelector("div.scrollable-container");
+      return container?.scrollHeight || 0;
+    });
+  }
+}
+
 async function getConversations(page: Page): Promise<Conversation[]> {
   console.log("Navigating to library...");
   await page.goto("https://www.perplexity.ai/library");
 
   await page.waitForSelector('div[data-testid="thread-title"]');
+  await scrollToBottomOfConversations(page);
 
   // Get all conversation links
   const conversations = await page.evaluate(() => {
@@ -70,40 +99,33 @@ async function getConversations(page: Page): Promise<Conversation[]> {
 
 async function saveConversation(
   page: Page,
-  conversation: Conversation,
-  outputDir: string
+  conversation: Conversation
 ): Promise<void> {
-  console.log(`Processing conversation: ${conversation.title}`);
+  console.log(`Processing conversation: ${conversation.url}`);
   await page.goto(conversation.url);
 
-  // Wait for the conversation content to load
-  await page.waitForSelector('[data-testid="message-content"]');
+  // Keep trying to find the "Export as Markdown" option
+  let exportOptionFound = false;
+  while (!exportOptionFound) {
+    // Click the kebab menu (three dots)
+    await page.waitForSelector('[data-testid="thread-dropdown-menu"]');
+    await page.click('[data-testid="thread-dropdown-menu"]');
 
-  // Extract the conversation content
-  const content = await page.evaluate(() => {
-    const messages = document.querySelectorAll(
-      '[data-testid="message-content"]'
-    );
-    return Array.from(messages)
-      .map((msg) => {
-        const role = msg.closest('[data-testid="user-message"]')
-          ? "User"
-          : "Assistant";
-        return `## ${role}\n\n${msg.textContent?.trim() || ""}\n\n`;
-      })
-      .join("---\n\n");
-  });
+    // Check if Export as Markdown option exists
+    try {
+      await page.waitForSelector("text/Export as Markdown", { timeout: 1000 });
+      exportOptionFound = true;
+    } catch (e) {
+      // Option not found, wait a bit and try again
+      await sleep(500);
+    }
+  }
+  await page.click("text/Export as Markdown");
 
-  // Create markdown content
-  const markdown = `# ${conversation.title}\n\n${content}`;
+  // Wait for the download to complete (adjust timeout if needed)
+  await sleep(5000);
 
-  // Save to file
-  const filename = `${conversation.title
-    .replace(/[^a-z0-9]/gi, "_")
-    .toLowerCase()}.md`;
-  const filepath = path.join(outputDir, filename);
-  await fs.writeFile(filepath, markdown);
-  console.log(`Saved to: ${filepath}`);
+  console.log(`Saved: ${conversation.url}`);
 }
 
 async function main(): Promise<void> {
@@ -119,17 +141,21 @@ async function main(): Promise<void> {
   try {
     const page = await browser.newPage();
 
+    // Configure Puppeteer to allow downloads and set download directory
+    const client = await page.createCDPSession();
+    await client.send("Page.setDownloadBehavior", {
+      behavior: "allow",
+      downloadPath: outputDir,
+    });
+
     await login(page);
     const conversations = await getConversations(page);
 
     console.log(`Found ${conversations.length} conversations`);
 
-    console.log(JSON.stringify(conversations, null, 2));
-
-    // for (const conversation of conversations) {
-    //   await saveConversation(page, conversation, outputDir);
-    //   await sleep(1000); // Be nice to the server
-    // }
+    for (const conversation of conversations) {
+      await saveConversation(page, conversation);
+    }
   } catch (error) {
     console.error("An error occurred:", error);
   } finally {
