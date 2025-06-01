@@ -1,10 +1,12 @@
 import { Page } from "puppeteer";
 import { Conversation } from "./types";
 import { sleep } from "./utils";
+import { DownloadManager } from "./DownloadManager";
 
 export async function saveConversation(
   page: Page,
-  conversation: Conversation
+  conversation: Conversation,
+  downloadManager: DownloadManager
 ): Promise<void> {
   console.log(`Processing conversation: ${conversation.url}`);
   await page.goto(conversation.url);
@@ -26,9 +28,8 @@ export async function saveConversation(
     }
   }
   await page.click("text/Export as Markdown");
-
-  // Wait for the download to complete (adjust timeout if needed)
-  await sleep(5000);
+  const downloadedFile = await downloadManager.waitForDownload();
+  console.log(`Downloaded file: ${downloadedFile}`);
 
   console.log(`Saved: ${conversation.url}`);
 }

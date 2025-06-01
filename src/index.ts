@@ -1,12 +1,13 @@
 import "dotenv/config";
 import { promises as fs } from "fs";
-import { Browser } from "puppeteer";
+import { Browser, Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { loadDoneFile, saveDoneFile } from "./utils";
 import { login } from "./login";
 import { getConversations } from "./listConversations";
 import { saveConversation } from "./saveConversation";
+import { DownloadManager } from "./DownloadManager";
 
 // add stealth plugin and use defaults (all evasion techniques)
 puppeteer.use(StealthPlugin());
@@ -32,10 +33,8 @@ async function main(): Promise<void> {
 
     // Configure Puppeteer to allow downloads and set download directory
     const client = await page.createCDPSession();
-    await client.send("Page.setDownloadBehavior", {
-      behavior: "allow",
-      downloadPath: outputDir,
-    });
+    const downloadManager = new DownloadManager(client, outputDir);
+    await downloadManager.configureDownloadBehavior();
 
     await login(page);
     const conversations = await getConversations(page, doneFile);
@@ -43,7 +42,7 @@ async function main(): Promise<void> {
     console.log(`Found ${conversations.length} new conversations to process`);
 
     for (const conversation of conversations) {
-      await saveConversation(page, conversation);
+      await saveConversation(page, conversation, downloadManager);
       doneFile.processedUrls.push(conversation.url);
       // Save after each conversation in case of interruption
       await saveDoneFile(doneFile);
