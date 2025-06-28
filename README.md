@@ -4,7 +4,7 @@ This tool automatically exports your Perplexity conversations as markdown files.
 
 It's raw but functional. You will need to log in using your email code.
 
-There is a pretty heavy rate limit, so don't expect to download more than a few dozen conversations at a time.
+There is a rate limit. It seems to be a leaky bucket rate limit, with a total size of 20 and a replenishment rate of 1 in 10 minutes. So it probably makes sense to run the script around once in 4 hours. Retrying is not effective with a leaky bucket, as when all tokens are used up, you will only be able to do 1 download in 10 minutes.
 
 ## Setup
 

@@ -16,7 +16,20 @@ export async function saveConversation(
   while (!exportOptionFound) {
     // Click the kebab menu (three dots)
     await page.waitForSelector('[data-testid="thread-dropdown-menu"]');
-    await page.click('[data-testid="thread-dropdown-menu"]');
+    try {
+      await page.click('[data-testid="thread-dropdown-menu"]');
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.includes("Node is detached from document")
+      ) {
+        // Wait briefly and retry once
+        await sleep(500);
+        await page.click('[data-testid="thread-dropdown-menu"]');
+      } else {
+        throw error;
+      }
+    }
 
     // Check if Export as Markdown option exists
     try {

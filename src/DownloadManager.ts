@@ -90,7 +90,7 @@ export class DownloadManager {
 
   private setupResponseListener(page: Page): void {
     page.on("response", (response) => {
-      if (!response.ok() && this.downloadReject) {
+      if (response.status() >= 400 && this.downloadReject) {
         this.downloadReject(
           new DownloadError(
             `Download failed: HTTP ${response.status()} ${response.statusText()}`,
