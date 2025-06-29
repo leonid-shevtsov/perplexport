@@ -1,10 +1,12 @@
 # Perplexity Conversation Exporter
 
-This tool automatically exports your Perplexity conversations as markdown files. Built with TypeScript and Puppeteer.
+This tool automatically exports your Perplexity conversations as JSON and markdown files. Built with TypeScript and Puppeteer.
 
-It's raw but functional. You will need to log in using your email code.
+It's raw but functional. You will need to log in using your email code. Sometimes there are issues with stability (as to be expected with browser automation).
 
-There is a rate limit. It seems to be a leaky bucket rate limit, with a total size of 20 and a replenishment rate of 1 in 10 minutes. So it probably makes sense to run the script around once in 4 hours. Retrying is not effective with a leaky bucket, as when all tokens are used up, you will only be able to do 1 download in 10 minutes.
+Your credentials and session are not stored, so from one side it's all secure, from the other requires manual attention to run.
+
+I do not use the export functionality (it's rate limited and the output is quite sparse), but render the conversation from its data. The data itself is stored as JSON and could be considered a complete backup of the conversation.
 
 ## Setup
 
@@ -35,8 +37,9 @@ The script will:
 1. Log in to your Perplexity account (Only login with email is currently supported)
 2. You will need to provide the login code sent to your email
 3. Navigate to your conversation library
-4. Export each conversation as a markdown file
-5. Save the files in the specified output directory (defaults to `./conversations`)
+4. Store every conversation's data in JSON
+5. Render conversation into Markdown
+6. Save the files in the specified output directory (defaults to `./conversations`)
 
 ---
 
