@@ -24,7 +24,7 @@ export async function login(page: Page): Promise<void> {
   await page.waitForNavigation();
 
   // Wait for the main chat input to be ready
-  await page.waitForSelector('textarea[placeholder="Ask anything…"]', {
+  await page.waitForSelector("#ask-input", {
     timeout: 120000,
   });
 

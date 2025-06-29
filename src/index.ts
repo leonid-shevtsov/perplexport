@@ -3,11 +3,10 @@ import { promises as fs } from "fs";
 import { Browser, Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { loadDoneFile, saveDoneFile } from "./utils";
+import { loadDoneFile, saveDoneFile, sleep } from "./utils";
 import { login } from "./login";
 import { getConversations } from "./listConversations";
-import { saveConversation } from "./saveConversation";
-import { DownloadManager } from "./DownloadManager";
+import { ConversationSaver } from "./ConversationSaver";
 
 // add stealth plugin and use defaults (all evasion techniques)
 puppeteer.use(StealthPlugin());
@@ -31,19 +30,30 @@ async function main(): Promise<void> {
   try {
     const page = await browser.newPage();
 
-    // Configure Puppeteer to allow downloads and set download directory
-    const downloadManager = await DownloadManager.create(page, outputDir);
-
     await login(page);
     const conversations = await getConversations(page, doneFile);
 
     console.log(`Found ${conversations.length} new conversations to process`);
 
+    const conversationSaver = new ConversationSaver(page);
+    await conversationSaver.initialize();
+
     for (const conversation of conversations) {
-      await saveConversation(page, conversation, downloadManager);
+      const threadData = await conversationSaver.loadThreadFromURL(
+        conversation.url
+      );
+
+      // place the thread data in the output directory
+      await fs.writeFile(
+        `${outputDir}/${threadData.id}.json`,
+        JSON.stringify(threadData.conversation, null, 2)
+      );
+
       doneFile.processedUrls.push(conversation.url);
       // Save after each conversation in case of interruption
       await saveDoneFile(doneFile);
+
+      await sleep(2000); // don't do it too fast
     }
   } catch (error) {
     console.error("An error occurred:", error);
