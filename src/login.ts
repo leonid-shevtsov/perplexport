@@ -1,6 +1,6 @@
 import { Page } from "puppeteer";
 
-export async function login(page: Page): Promise<void> {
+export async function login(page: Page, email: string): Promise<void> {
   console.log("Navigating to Perplexity...");
   await page.goto("https://www.perplexity.ai/");
 
@@ -8,7 +8,7 @@ export async function login(page: Page): Promise<void> {
 
   // Wait for email input and enter credentials
   await page.waitForSelector('input[type="email"]');
-  await page.type('input[type="email"]', process.env.PERPLEXITY_EMAIL || "");
+  await page.type('input[type="email"]', email);
 
   // Click the login submit button
   await page.click("button::-p-text('Continue with email')");

@@ -1,0 +1,24 @@
+# Source files
+src/
+*.ts
+tsconfig.json
+
+# Development files
+.git/
+.gitignore
+yarn.lock
+
+# Test files
+test-install.sh
+
+# Output directories (except dist)
+conversations/
+*.json
+*.md
+
+# IDE files
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db

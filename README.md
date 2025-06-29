@@ -6,30 +6,26 @@ It's raw but functional. You will need to log in using your email code. Sometime
 
 Your credentials and session are not stored, so from one side it's all secure, from the other requires manual attention to run.
 
-I do not use the export functionality (it's rate limited and the output is quite sparse), but render the conversation from its data. The data itself is stored as JSON and could be considered a complete backup of the conversation.
+I do not use the built-in export functionality (it's rate limited and the output is quite sparse), but render the conversation from its data. The data itself is stored as JSON and could be considered a complete backup of the conversation.
 
-## Setup
+## Installation
 
-1.  Clone and install dependencies
-
-    ```bash
-    git clone https://github.com/leonid-shevtsov/perplexity-exporter.git
-    yarn
-    ```
-
-2.  Create a `.env` file in the project root with your Perplexity credentials:
-
-    ```
-    PERPLEXITY_EMAIL=your_email@example.com
-    OUTPUT_DIR=./conversations
-    ```
-
-    (Or just pass these environment variables to the script in some other way.)
+```
+yarn global install perplexport
+```
 
 ## Usage
 
-```bash
-yarn start
+```
+Usage: perplexport [options]
+
+Export Perplexity conversations as markdown files
+
+Options:
+  -o, --output <directory>  Output directory for conversations (default: ".")
+  -d, --done-file <file>    Done file location (tracks which URLs have been downloaded before) (default: "done.json")
+  -e, --email <email>       Perplexity email
+  -h, --help                display help for command
 ```
 
 The script will:
@@ -40,6 +36,13 @@ The script will:
 4. Store every conversation's data in JSON
 5. Render conversation into Markdown
 6. Save the files in the specified output directory (defaults to `./conversations`)
+
+## Development setup
+
+```bash
+git clone https://github.com/leonid-shevtsov/perplexport.git
+yarn
+```
 
 ---
 
