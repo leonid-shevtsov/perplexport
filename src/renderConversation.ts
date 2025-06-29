@@ -84,12 +84,17 @@ function cleanupAnswer(answer: string, entryIndex: number): string {
 function renderSources(sources: SourcesModeBlock, entryIndex: number): string {
   let sourcesText = `## ${sources.rows.length} Sources\n\n`;
   sources.rows.forEach((row) => {
-    sourcesText += `- [${row.web_result.name}](${
-      row.web_result.url
-    }) ${hostLabel(row.web_result.url)}`;
+    if (row.web_result.url.startsWith("http")) {
+      sourcesText += `- [${row.web_result.name}](${
+        row.web_result.url
+      }) ${hostLabel(row.web_result.url)}`;
+    } else {
+      sourcesText += `- ${row.web_result.name} (${row.web_result.url})`;
+    }
     if (row.web_result.snippet) {
       sourcesText += `\n    ${row.web_result.snippet}`;
     }
+
     if (row.citation) {
       sourcesText += ` ^${entryIndex + 1}-${row.citation}`;
     }

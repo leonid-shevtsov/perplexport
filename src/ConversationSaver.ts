@@ -1,9 +1,9 @@
 import { Page } from "puppeteer";
-import { ConversationEntry } from "./types/conversation";
+import { ConversationResponse } from "./types/conversation";
 
 interface ThreadData {
   id: string;
-  conversation: ConversationEntry;
+  conversation: ConversationResponse;
 }
 
 export class ConversationSaver {
@@ -30,7 +30,7 @@ export class ConversationSaver {
           return;
         }
         try {
-          const data = (await response.json()) as ConversationEntry;
+          const data = (await response.json()) as ConversationResponse;
           if (this.resolve) {
             this.resolve({
               id: threadId,

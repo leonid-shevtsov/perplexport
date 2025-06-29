@@ -7,6 +7,7 @@ import { loadDoneFile, saveDoneFile, sleep } from "./utils";
 import { login } from "./login";
 import { getConversations } from "./listConversations";
 import { ConversationSaver } from "./ConversationSaver";
+import renderConversation from "./renderConversation";
 
 // add stealth plugin and use defaults (all evasion techniques)
 puppeteer.use(StealthPlugin());
@@ -48,6 +49,10 @@ async function main(): Promise<void> {
         `${outputDir}/${threadData.id}.json`,
         JSON.stringify(threadData.conversation, null, 2)
       );
+
+      // render conversation to markdown and save
+      const markdown = renderConversation(threadData.conversation);
+      await fs.writeFile(`${outputDir}/${threadData.id}.md`, markdown);
 
       doneFile.processedUrls.push(conversation.url);
       // Save after each conversation in case of interruption
