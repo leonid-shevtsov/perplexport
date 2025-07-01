@@ -8,16 +8,10 @@ Your credentials and session are not stored, so from one side it's all secure, f
 
 I do not use the built-in export functionality (it's rate limited and the output is quite sparse), but render the conversation from its data. The data itself is stored as JSON and could be considered a complete backup of the conversation.
 
-## Installation
-
-```
-yarn global install perplexport
-```
-
 ## Usage
 
 ```
-Usage: perplexport [options]
+Usage: npx perplexport -e <email> [options]
 
 Export Perplexity conversations as markdown files
 
@@ -36,6 +30,10 @@ The script will:
 4. Store every conversation's data in JSON
 5. Render conversation into Markdown
 6. Save the files in the specified output directory (defaults to `./conversations`)
+
+### Troubleshooting
+
+If the browser doesn't open at all, or opens and closes instantly, try `npx puppeteer browsers install chrome`.
 
 ## Development setup
 
