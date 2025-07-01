@@ -33,7 +33,8 @@ The script will:
 
 ### Troubleshooting
 
-If the browser doesn't open at all, or opens and closes instantly, try `npx puppeteer browsers install chrome`.
+- If the browser doesn't open at all, or opens and closes instantly, try `npx puppeteer browsers install chrome`.
+- Puppeteer doesn't like to be ran from a global installation, so perhaps try cloning the project and running it this way.
 
 ## Development setup
 
